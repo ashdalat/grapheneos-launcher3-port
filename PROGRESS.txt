@@ -1,0 +1,472 @@
+# GRAPHENE-PORT: ghi chu build that (cap nhat lien tuc)
+
+## Muc tieu
+GrapheneOS Launcher3 (branch 17) -> APK cai nhu USER APP:
+- applicationId `app.graphene.launcher` (+ ".debug") => KHONG de launcher he thong
+  (vi package khac `com.android.launcher3`).
+- Icon rieng `@mipmap/ic_launcher_graphene` (adaptive + monochrome).
+- Flavor `noQuickstepStandalone` = HOME launcher thuong (kieu Neo), khong can root.
+- Flavor `withQuickstepStandalone` = co Recents (can them viec, xem cuoi file).
+
+## Cau hinh may
+- CachyOS (Arch). Shell = **fish**.
+  => Lenh dai phai chay nen: `nohup ./gradlew ... > docs/screenshots/buildN.log 2>&1 &`
+     de terminal khong hien "proceed while running".
+- `jdk21-openjdk` (pacman). `JAVA_HOME=/usr/lib/jvm/java-21-openjdk`.
+- Android SDK: platforms;android-37.2, build-tools;37.0.0.
+- `local.properties`: `sdk.dir=$ANDROID_HOME`.
+
+## Cau truc (root project = app module, giong Lawnchair)
+- `build.gradle` : root + app (namespace com.android.launcher3)
+- `settings.gradle` : include cac module
+- `src/`, `src_no_quickstep/`, `src_plugins/`, `res/`, `protos/`, `quickstep/`
+  = COPY tu grapheneos-launcher3-17
+- `src/app/graphene/launcher/GrapheneApp.java` = class gate recents (moi viet)
+- `res_graphene/` = ICON MOI
+- Modules: platform_frameworks_libs_systemui/{iconloaderlib,animationlib,msdllib,
+  contextualeducationlib,viewcapturelib,displaylib,mechanics,dynamiccolors,cuebarlib},
+  systemUI/{shared,plugin,plugin_core,common,log,animation,unfold,utils},
+  compatLib/*, flags, wmshell, dagger, concurrent, androidx-lib, modules/widgetpicker
+- `prebuilts/libs/` = framework-10..16.jar, SystemUI-*, WindowManager-Shell-*, wmshell-aidls
+- `docs/screenshots/` = log cac lan build
+
+## Loi da fix (theo thu tu)
+1. AGP9 co Kotlin tich hop => khong apply `org.jetbrains.kotlin.android` o module con;
+   cuebarlib: bo plugin + bo sourceSets custom, chuyen sang `src/main/java`.
+2. `compileOnlyCommonJars()` khong goi duoc trong build.gradle.kts subproject
+   => dung `dependencies { compileOnly(fileTree(...)) }`.
+3. Thieu `include ':androidx-lib'` (systemUI/unfold can `projects.androidxLib`).
+4. Thieu framework-10..15.jar (compatLib can) => copy tu lawnchair-ref/prebuilts/libs.
+5. `wmshell:compileDebugAidl` fail: SDK framework.aidl thieu RemoteTransition/TransitionFilter
+   => them `wmshell/aidl_framework/android/window/*.aidl` (declaration-only) + aidl.srcDirs.
+6. widgetpicker thieu material-icons-extended => them `libs.compose.material.icons`.
+7. systemUI/shared (LawnchairQuickstepCompat.kt) can compatLib => them
+   `compileOnly projects.compatLib...compatLibVBaklava`.
+8. Manifest merger: icon khai bao 2 noi (common + flavor) => set cung
+   `@mipmap/ic_launcher_graphene` o ca AndroidManifest.xml va common; bo `package=`.
+9. `android:featureFlag=...` trong manifest: SDK khong co flag do
+   => bo attribute featureFlag (giu lai uses-permission).
+   File: AndroidManifest-common.xml (LOCK_APPS), quickstep/AndroidManifest.xml
+   (REPORT_UI_LATENCY_STATS, MANAGE_KEY_GESTURES, LAUNCH_FILE_MANAGER).
+10. `androidprv:color/*` (private resource cua framework, chi co khi platform_apis):
+    - Nguon: `platform_frameworks_libs_systemui/dynamiccolors/res/values*/colors.xml`
+    - Fix: `tools/vendor_private_colors.py` thay `@androidprv:color/X` -> `@color/dcv_X`
+      va sinh `dynamiccolors/res/values{,-night}/dcv_colors.xml` voi 54 mau that
+      lay tu AOSP 17 (`frameworks/base/core/res/res/values/colors.xml`).
+11. **Kotlin source dirs** (quan trong nhat): AGP 9 built-in Kotlin KHONG tu lay .kt tu
+    `java.srcDirs`. Neu khong khai bao `kotlin.directories`, task
+    `compile<Variant>Kotlin` bao NO-SOURCE => 390 file .kt khong duoc compile
+    => Java bao hang loat "package com.android.launcher3.deviceprofile/display/responsive
+    does not exist". Fix: them `kotlin.directories.addAll('src', 'src_plugins', ...)`
+    cho tung sourceSet (main/noQuickstep/withQuickstep).
+12. Thieu `launcher-testing-shared` (package `com.android.launcher3.testing.shared`):
+    copy `grapheneos-launcher3-17/shared/src` -> `src_testing_shared/` va them vao
+    java.srcDirs + kotlin.directories.
+14. Thieu aconfig flags cua AOSP 17 (`Flags.xyz()` cho 105 flag):
+    - AOSP sinh bang aconfig tool; Gradle khong co => viet generator
+      `tools/gen_launcher_flags.py` sinh 5 file vao
+      `flags/src/com/android/launcher3/`: Flags, FeatureFlags, FeatureFlagsImpl,
+      CustomFeatureFlags, FakeFeatureFlagsImpl (default = true, doi `DEFAULT` trong
+      script neu muon tat het).
+    - Chay lai: `python3 tools/gen_launcher_flags.py`
+15. Dagger: them `implementation libs.dagger` + `ksp libs.dagger.compiler`.
+16. Bo tinh nang AppFunctions (androidx.appfunctions la mainline module, khong co
+    tren Maven):
+    - xoa `src/com/android/launcher3/workspacefunctions/`,
+      `src/com/android/launcher3/dagger/WorkspaceFunctionsLauncherModule.kt`
+    - patch: LauncherApplication.java (bo implements AppFunctionConfiguration.Provider),
+      dagger/LauncherBaseAppComponent.java (bo getWorkspaceAppFunctions),
+      dagger/LauncherAppModule.kt + preview/PreviewContext.kt (bo module khoi danh sach)
+    - manifest: bo `<property android:name="android.app.appfunctions.app_metadata">`
+      va service `androidx.appfunctions.service.ExtensionAppFunctionService`
+20. `android.nonTransitiveRClass=false` (gradle.properties): AOSP Launcher3 dung 1 R
+    chung cho moi lib (Soong merge resource). Neu de true thi app khong thay
+    `R.color.materialColor*` cua dynamiccolors => hang loat loi.
+21. Them dependency cho app: `libs.androidx.slice.core` (androidx.slice.SliceItem),
+    `libs.androidx.graphics.shapes` (androidx.graphics.shapes.SvgPathParser),
+    `libs.dagger.hilt.android` (@EntryPoint), `projects.usertypelib` (UserType),
+    `libs.google.guava` (ListeningExecutorService),
+    `com.google.code.findbugs:jsr305:3.0.2` (javax.annotation.concurrent.ThreadSafe).
+22. API @hide moi cua A17 khong co trong framework-16.jar -> tao util
+    `src/com/android/launcher3/util/A17Compat.java` (goi bang reflection, an toan
+    ca khi may khong ho tro) va patch:
+    - `android.security.Flags.appLockApis()` (AppInfo.java, SystemShortcut.java,
+      util/ApplicationInfoWrapper.kt)
+    - `view.startVisibilityTracking()/stopVisibilityTracking()`
+      (widget/WidgetVisibilityTracker.kt)
+    - `android.Manifest.permission.ACCESS_LAUNCHER_DATA` (model/ModelProxyProvider.kt
+      -> dung chuoi truc tiep)
+    - `com.android.systemui.shared.Flags.workspaceItemsLabelHidden()`
+      (deviceprofile/WorkspaceProfile.kt -> bo dieu kien flag, giu isItemLabelHidden)
+
+    - Trieu chung: `Unresolved reference 'forceMonochromeAppIconsAdaptColors'`
+      (flag A17 khong co trong aconfig A16).
+    - Fix: `cp ../grapheneos-launcher3-17/aconfig/*.aconfig aconfig/` roi chay lai
+      `python3 tools/gen_launcher_flags.py`.
+
+    - `platform_frameworks_libs_systemui/iconloaderlib`: thay `src`, `src_full_lib`,
+      `res` bang ban GrapheneOS 17 (29 file .kt, co ListenableRef /
+      FastBitmapDrawableDelegate / GraphicsUtils.pathSize...). Giu build.gradle
+      (them `kotlin.directories.addAll('src','src_full_lib')` + dep usertypelib).
+    - Them module `:usertypelib` (namespace `com.android.users`) cho UserType.
+    - `concurrent`: thay bang `grapheneos-launcher3-17/modules/concurrent/src`
+      (co annotation `@TaskbarUi` ma A16 thieu).
+
+    ListenableRef/MutableListenableRef, FastBitmapDrawableDelegate, pathSize...).
+    => phai thay `platform_frameworks_libs_systemui/iconloaderlib` (ban A16 cua
+    Lawnchair) bang ban GrapheneOS 17 va them usertypelib/ambientlib/tracinglib...
+
+23. Loi Java cuoi cung (A17/GrapheneOS-only API):
+    - `com.android.systemui.shared.Flags.workspaceItemsLabelHidden()` va
+      `enableRecentsInTaskbar()`: THEM vao `flags/src/com/android/systemui/shared/`
+      (Flags.java + FeatureFlags.java dang `default` -> tra true).
+    - `com.android.window.flags.Flags.enableNonDefaultDisplaySplitBugfix()`:
+      patch `Utilities.java` (bo static import, coi nhu da bat).
+    - `android.content.pm.GosPackageState` / `GosPackageStateFlag`,
+      `android.app.StorageScope`, `android.ext.cscopes.ContactScopesApi`:
+      API rieng GrapheneOS / @hide khong co trong jar AOSP => patch
+      `popup/SystemShortcut.java` (Storage/Contact Scopes shortcut khong hien).
+    - `BubbleFlagHelper` (wmshell shared bubbles A17): tao stub trong
+      `src/com/android/wm/shell/shared/bubbles/BubbleFlagHelper.kt`.
+    - `dagger.hilt.EntryPoint` -> them `libs.dagger.hilt.android`.
+    - `PackageManager.getEnableAppLockIntentForPackage` -> A17Compat (reflection).
+
+================================================================================
+## KET QUA: BUILD THANH CONG
+================================================================================
+
+APK: `GrapheneLauncher-debug.apk` (93.6 MB, debug)
+  = build/outputs/apk/noQuickstepStandalone/debug/graphene-port-noQuickstep-standalone-debug.apk
+sha256: 0336473625334f6d86f7e5093d500a2b71692e60ad37bebdbe01fbc67ad6af38
+
+Thong tin APK (aapt2 dump badging):
+  package        : app.graphene.launcher.debug      <-- KHAC com.android.launcher3
+  label          : Graphene Launcher (Debug)
+  icon           : res/mipmap-anydpi-v26/ic_launcher_graphene.xml   <-- icon moi
+  versionName    : 17.0-port-1
+  minSdk 30 / targetSdk 37 (Android 17), compileSdk 37.2
+  provides-component: 'launcher'  (co category HOME)
+
+=> Cai nhu app thuong, KHONG ghi de launcher he thong (khac package).
+   Debug APK da duoc ky bang debug keystore nen cai duoc ngay.
+
+Lenh build (build lai):
+```fish
+cd ./
+set -x JAVA_HOME /usr/lib/jvm/java-21-openjdk
+./gradlew :assembleNoQuickstepStandaloneDebug --no-daemon
+```
+
+
+
+
+
+## Lenh build
+```fish
+cd ./
+set -x JAVA_HOME /usr/lib/jvm/java-21-openjdk
+./gradlew :assembleNoQuickstepStandaloneDebug --no-daemon
+# APK: build/outputs/apk/noQuickstepStandalone/debug/
+```
+
+## Trang thai
+- Toan bo module lib + wmshell + widgetpicker + compatLib: COMPILE OK.
+- App (noQuickstepStandaloneDebug): BUILD OK, DA CAI VA TEST TREN MAY THAT -> xem muc cuoi.
+
+
+================================================================================
+## VERIFY TREN MAY THAT (Pixel 8 "shiba", GrapheneOS 17) - 19/09/2026 23:26
+================================================================================
+Fingerprint: google/shiba/shiba:17/CP2A.260805.005/2026090701:user/release-keys
+  ro.build.version.release = 17 ; sdk = 37 ; security patch 2026-08-05
+  Launcher he thong: com.android.launcher3 versionName=17 (KHOP base branch 17 cua ban port)
+
+1) CAI DAT
+   adb install -r -d GrapheneLauncher-debug.apk   -> "Performing Streamed Install / Success"
+   package     : app.graphene.launcher.debug
+   versionName : 17.0-port-1 ; primaryCpuAbi=arm64-v8a
+   codePath    : /data/app/~~.../app.graphene.launcher.debug-.../   (user app trong /data)
+   => KHONG ghi de launcher he thong (khac package).
+   Home candidates tren may (cmd package query-activities -a MAIN -c HOME): 3
+     #0 com.android.launcher3/.uioverrides.QuickstepLauncher        (he thong)
+     #1 app.graphene.launcher.debug/com.android.launcher3.Launcher  <-- ban port, isDefault=true
+     #2 com.android.settings/.FallbackHome
+
+2) KHOI DONG LANH - KHONG CRASH
+   adb shell am start -n app.graphene.launcher.debug/com.android.launcher3.Launcher
+   -> Status: ok / LaunchState: COLD / TotalTime: 1901ms
+      "Displayed app.graphene.launcher.debug/com.android.launcher3.Launcher for user 0: +1s901ms"
+   adb logcat -b crash => 0 dong (khong FATAL/AndroidRuntime)
+   Gate cua GrapheneApp chay dung thiet ke:
+     I GrapheneApp: Not system Recents provider. system=com.android.launcher3/com.android.quickstep.RecentsActivity expected=app.graphene.launcher.debug/com.android.quickstep.RecentsActivity
+     I GrapheneApp: Graphene Launcher user-app, isRecentsProvider=false
+     I GrapheneApp: Quickstep not present in this build, nothing to disable
+   Process song: u0_a256 ... S app.graphene.launcher.debug (RSS ~413 MB - ban debug)
+
+3) RENDER UI  ()
+   wallpaper + workspace (Proton Mail / Gallery / App Store) + hotseat 5 icon +
+   page indicator + status bar: OK.
+
+4) APP DRAWER (swipe len)  ()
+   Search bar "Search apps" + grid toan bo app kem label: OK, khong exception.
+   (App cua chinh no bi an khoi drawer - dung hanh vi Launcher3.)
+
+5) DAT LAM HOME MAC DINH
+   adb shell cmd package set-home-activity app.graphene.launcher.debug/com.android.launcher3.Launcher
+   -> Success
+   resolve-activity -a MAIN -c HOME => app.graphene.launcher.debug/com.android.launcher3.Launcher
+   Bam KEYCODE_HOME tu app Settings -> quay ve launcher minh: OK, khong exception.
+
+6) RECENTS (nut vuong / gesture)  ()
+   adb shell input keyevent KEYCODE_APP_SWITCH
+   -> Recents MO DUOC, nhung do QuickStep CUA LAUNCHER HE THONG cung cap:
+      topResumedActivity = com.android.launcher3/com.android.quickstep.RecentsActivity
+      log: ShellRecents: recents occluded 3p home / normal finish / RecentsController.finishInner
+   => Van co overview day du (card, nut Screenshot, search pill), nhung KHONG phai
+      recents tich hop cua ban port. Vi vay KHONG can root/QuickSwitch chi de co recents co ban;
+      chi can flavor withQuickstepStandalone khi muon recents cua chinh minh
+      (luc do moi can STATUS_BAR_SERVICE => root + QuickSwitch).
+
+7) LONG-PRESS HOME SCREEN  ()
+   Popup hien day du: Wallpaper & style / Widgets / Apps list / Create Folder /
+   Home organizer / Home settings -> code A17 (ke ca tinh nang moi) chay OK.
+
+8) DEFAULT LAYOUT / RESOLVE (kiem tra bang uiautomator dump)
+   Home screen hien tai = default layout `res/xml/default_workspace_5x5.xml`
+   (khong phai copy layout cua launcher cu):
+     workspace : Proton Mail (<resolve> APP_EMAIL) / Gallery (<resolve> APP_GALLERY) / App Store
+     hotseat   : Phone (DIAL) / Messaging (APP_MESSAGING) / Settings / Vanadium
+                 (<resolve> http://www.example.com/ = browser mac dinh) / Camera
+   => DefaultLayoutParser + tag <resolve>/<favorite> hoat dong dung, ke ca resolve
+      theo intent (dial/sms/email/gallery/browser/camera).
+   (Icon tron xam o hotseat trong screenshot chinh la Vanadium - khong phai loi icon.)
+
+9) WIDGET BIND / DRAG-DROP / MENU ICON  (, docs/screenshots/ui*.txt)
+   Cach test: adb shell input motionevent DOWN x y -> sleep -> UP (long-press that),
+   roi `python3 tools/ui.py [filter]` doc uiautomator dump kem toa do tap.
+   a) Widgets picker: mo duoc, liet ke widget cua app user (Shopee / Lite / Facebook),
+      co nut "Add <ten> widget" ngay trong danh sach. Search OK.
+   b) BIND WIDGET: bam "Add Shopee widget" => he thong (com.android.settings) hien dialog
+        "Create widget and allow access?"
+        "Application: Graphene Launcher (Debug) / Widget: Shopee"
+        + checkbox "Always allow Graphene Launcher (Debug) to create widgets and access
+          their data"
+      => bam "Create" => widget Shopee hien tren workspace, resize frame OK.
+      View class = com.android.launcher3.widget.LauncherAppWidgetHostView (host cua ban port).
+      => KET LUAN: vi la user app (BIND_APPWIDGET la signature|privileged nen KHONG duoc cap),
+         Android hoi nguoi dung 1 lan cho moi widget; tick "Always allow" thi lan sau khong hoi.
+         Day dung la luong chuan cua moi launcher ben thu 3 (Nova/Lawnchair) => KHONG phai loi.
+   c) DRAG-DROP: keo widget tu (231,536) -> (643,909) bang chuoi DOWN / MOVE / MOVE / UP: OK,
+      widget doi vi tri dung toa do tha, khong ve lai vi tri cu.
+   d) Long-press widget => menu "Remove": OK, go sach, workspace tro ve dung 3 icon + 5 hotseat
+      (dump lai chi con 9 node). dumpsys appwidget chi con 1 host:
+        hostId=HostId{user:0, app:10256, hostId:1024, pkg:app.graphene.launcher.debug}
+      => khong ro ri appWidgetId sau khi Remove.
+   e) Long-press icon app tren workspace (Proton Mail) => menu "App info" / "Remove": OK
+      (menu day du kieu A17, khong thieu muc nao cua launcher thuong).
+   f) logcat trong suot qua trinh tren: 0 exception / 0 ANR cua app.graphene.launcher.debug.
+
+10) QUYEN THUC TE CUA BAN PORT  (aapt2 dump permissions + dumpsys package)
+   Duoc cap ngay khi cai (normal):
+     RECEIVE_BOOT_COMPLETED, SET_WALLPAPER, SET_WALLPAPER_HINTS, VIBRATE,
+     REQUEST_DELETE_PACKAGES, QUERY_ALL_PACKAGES, GRID_CONTROL (tu khai bao),
+     DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION, OTHER_SENSORS
+   KHONG duoc cap (signature|privileged - he thong giu):
+     BIND_APPWIDGET, LOCK_APPS, READ_DEVICE_CONFIG, ROTATE_SURFACE_FLINGER,
+     WAKEUP_SURFACE_FLINGER, com.android.systemui.permission.LAUNCH_ACCESSIBILITY_SHORTCUT_CHOOSER_DIALOG
+   Chua cap (runtime/dangerous - phai hoi nguoi dung, chua cap lan nao):
+     POST_NOTIFICATIONS, CALL_PHONE, READ_EXTERNAL_STORAGE (vo nghia tu SDK 33)
+   => BIND_APPWIDGET khong duoc cap nhung widget VAN bind duoc qua dialog dong y (muc 9b).
+      LOCK_APPS khong duoc cap => shortcut "Lock app" (App Lock A17) chi hien khi may/API ho tro,
+      co the khong chay tron ven khi bam.
+      POST_NOTIFICATIONS chua cap => tinh nang can thong bao (tips/notification) im lang;
+      muon thi nguoi dung tu bat trong Settings > Apps > Graphene Launcher > Notifications.
+
+11) CAC THU DA BI GO SO VOI SOURCE GOC (xem them muc 16/22/23 o phan build)
+   - AppFunctions: xoa `workspacefunctions/`, `WorkspaceFunctionsLauncherModule.kt`, service
+     `androidx.appfunctions.service.ExtensionAppFunctionService` (mainline module, khong co Maven).
+   - ModelProxyProvider: can `android.Manifest.permission.ACCESS_LAUNCHER_DATA` (khong cap cho
+     user app) -> dung chuoi truc tiep, cung khong con y nghia vi khong co quyen.
+   - Shortcut "Storage Scopes" / "Contact Scopes" trong menu icon: khong hien
+     (GosPackageState/GosPackageStateFlag, android.app.StorageScope, ContactScopesApi la API
+     rieng GrapheneOS, khong co trong jar AOSP dung de build).
+   - Attribute `android:featureFlag` trong manifest (LOCK_APPS, ...) bi bo vi SDK build khong co flag.
+   - Dynamic colors: thay bang bang mau tinh copy tu dynamiccolors (dcv_colors.xml, 54 mau) thay
+     cho @androidprv cua framework => theme Monet co the lech nhe so voi launcher he thong.
+   - Flags aconfig A17 sinh san voi default = true (xem `tools/gen_launcher_flags.py`) - mot vai
+     flag co the khac gia tri mac dinh that cua GrapheneOS.
+
+LENH REVERT / GO:
+  adb shell cmd package set-home-activity com.android.launcher3/.uioverrides.QuickstepLauncher
+  adb uninstall app.graphene.launcher.debug
+
+GHI CHU:
+  screen5_small.jpg),  (widget da bind), docs/screenshots/ui*.txt (uiautomator dump).
+- Cong cu test tu dong: `tools/ui.py` - dump UI hien tai + in nhan kem toa do tap:
+    python3 tools/ui.py            # tat ca node co nhan
+    python3 tools/ui.py widget     # chi node chua chu "widget"
+  Long-press that bang adb: `input motionevent DOWN x y; sleep 1.2; input motionevent UP x y`
+  (dung `input swipe x y x y 900` KHONG duoc - bi coi la swipe, popup khong mo).
+- DA TEST: khoi dong lanh, render, drawer, HOME, dat home mac dinh, recents, long-press home,
+  default layout/resolve, widget bind + drag-drop + remove, long-press icon app, quyen thuc te.
+- CHUA TEST (rui ro thap, khong chan dung hang ngay): tao folder, keo icon doi cho giua cac
+  trang, app suggestion trong hotseat, sao luu/restore layout (backup agent), xoay man hinh /
+  large screen (tablet/foldable), desktop mode / man hinh ngoai, work profile / private space,
+  va flavor `withQuickstepStandalone` (recents tich hop cua chinh ban port).
+
+================================================================================
+## PHAN 2A: AUDIT BAO MAT (link an / gui data ra ngoai / quyen INTERNET)
+================================================================================
+
+Ket luan: KHONG co INTERNET, KHONG co thu vien mang, KHONG co code gui du lieu.
+Chi tiet day du + bang chung: `SECURITY_AUDIT.md`.
+
+1) Quyen: `AndroidManifest-common.xml` khong he co `android.permission.INTERNET`
+   (khong co ca ACCESS_NETWORK_STATE / ACCESS_WIFI_STATE). Da kiem tra 4 tang:
+     - manifest nguon (AndroidManifest.xml, AndroidManifest-common.xml)
+     - APK debug: `aapt2 dump badging/permissions` -> khong co INTERNET
+     - APK release: nhu tren, va KHONG con `application-debuggable`
+     - tren may: `dumpsys package` -> khong co dong granted nao ve mang
+
+2) Thu vien mang/tracker: quet 1,3 trieu chuoi trong 22 file dex (ban debug) va dex ban
+   release: okhttp3=0, retrofit2=0, coil/=0, com/topjohnwu(libsu)=0, firebase(SDK that)=0,
+   crashlytics=0, HttpURLConnection=0, java/net/Socket=0, SslSocket=0, com/google/android/gms=0.
+   (Hai chuoi 'analytics' va 'firebaseapp' tim thay nam trong PUBLIC SUFFIX LIST cua Guava —
+   danh sach duoi ten mien, khong phai SDK.)
+
+3) Code: trong source cua app, `java.net.*` chi xuat hien duoi dang `java.net.URISyntaxException`
+   (3 file). Khong co `openConnection`, `new URL(`, `Socket`, `WebView.loadUrl`, khong co
+   `Runtime.exec`/`ProcessBuilder`/`DexClassLoader`/`System.loadLibrary`.
+   `Class.forName` chi 3 cho: `android.os.SystemProperties` (AOSP Utilities, doc prop he thong),
+   `android.security.Flags` (A17Compat), `com.android.quickstep.QuickStepContract` (gate GrapheneApp).
+   Khong doc IMEI/ANDROID_ID/location/contacts/call log.
+
+4) URL http/https trong source: toan bo la hang so vo hai, da phan loai tung cai trong
+   SECURITY_AUDIT.md muc 4:
+     - ~1.000 dong `http://www.apache.org/licenses/LICENSE-2.0` (header license AOSP)
+     - namespace `http://schemas.android.com/apk/...` (khong phai dia chi mang)
+     - link tai lieu/bug id trong comment: r.android.com, b/xxxx, goo.gle, youtrack.jetbrains.com,
+       carbon.googleplex.com, shortn, bottosson.github.io, developer.android.com, w3.org, xmlpull.org
+     - 2 link `policies.google.com` trong thu vien systemUI/shared (khong co luong nao mo)
+     - `http://www.example.com/` trong `res/xml/default_workspace_*.xml`: chi de chon icon
+       browser mac dinh bang `<resolve>`, launcher tao ACTION_VIEW roi tra cho trinh duyet
+     => Khong co endpoint nao duoc goi tu code launcher.
+
+5) Trung thuc (khong phai rui ro mang, nhung phai noi ro):
+   - APK co `org.chickenhook.restrictionbypass` + `libnrb.so` (ChickenHook RestrictionBypass,
+     GPL-3) va `dev.rikka.tools.refine.runtime`: lib de goi API @hide, co native hook.
+     Khong lien quan mang. Muon bo: xoa `libs.chickenhook.restrictionbypass` trong build.gradle.
+   - Ban debug co `android:debuggable="true"` (da bo o ban release) => debug de bi attach qua ADB.
+   - `QUERY_ALL_PACKAGES` duoc cap: launcher phai thay danh sach app de ve drawer (moi launcher deu xin).
+   - Du lieu launcher nam cuc bo trong /data/user/0/<pkg>/ (launcher.db, shared_prefs, files backup proto).
+
+6) Bang chung: `tools/audit_src.txt`, `tools/audit_apk.txt`, `tools/audit_dex.txt`,
+   `tools/audit_dex_detail.txt`, `docs/screenshots/perms_dev.txt`, `tools/verify_release.txt`.
+   Chay lai: `bash tools/audit.sh`, `bash tools/audit_dex.sh`, `bash tools/verify_release.sh`.
+
+================================================================================
+## PHAN 2B: BUILD RELEASE + MINIFY (uu tien 1 - giam dung luong + RAM)
+================================================================================
+
+1) File da sua de bat release co toi uu:
+   a) `build.gradle`
+      - them `signingConfigs { userKey { ... } }` tro vao `~/.android/debug.keystore`
+        (alias androiddebugkey / storepass android). Ly do: APK debug dang cai duoc ky bang
+        chinh cert nay (SHA-256 e2e73b94...195f07) => moi ban build sau deu nang cap duoc
+        bang `adb install -r`, khong phai go app.
+      - buildTypes.release: `minifyEnabled true`, `shrinkResources true`,
+        `signingConfig signingConfigs.userKey`,
+        `proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'`
+   b) `proguard-rules.pro` (moi): giu TEN class trong `com.android.launcher3.**`, `app.graphene.**`,
+      `com.android.systemui.**`, `com.android.wm.shell.**`, `com.android.quickstep.**`
+      (Launcher3 doc nhieu thu bang ten: XML inflation, aapt rules, metadata) nhung van cho R8
+      xoa code khong dung; keep rieng `QuickStepContract` (reflection), enum values()/valueOf,
+      CREATOR cua Parcelable, component (Activity/Service/Receiver/Provider/View/Fragment/
+      Preference), Dagger/Hilt, proto-lite; `-keep class org.chickenhook.**` cho native hook.
+   c) `AndroidManifest.xml`: BO `android:debuggable="true"` hardcode (build type debug tu them
+      lai cho ban debug) => ban release khong con debuggable.
+
+2) Loi gap khi R8 va cach fix:
+   R8 (AGP 9) coi "Missing class" la LOI chu khong phai canh bao: 73 class `com.android.wm.**`
+   (bubbles/split/desktop cua wmshell + systemUI/shared tham chieu cheo) va
+   `libcore.util.NativeAllocationRegistry`. Cac doan code do khong bao gio chay khi khong phai
+   Recents provider (flavor noQuickstep). Fix: them `-dontwarn com.android.wm.**`,
+   `-dontwarn libcore.**`, `-dontwarn android.**`, `-dontwarn com.android.internal.**`,
+   `-dontwarn com.android.systemui.**`, `-dontwarn org.apache.**` trong proguard-rules.pro.
+   Danh sach day du: `docs/screenshots/missing_prefix.txt` (chi co 2 tien to).
+   Sau do: BUILD SUCCESSFUL in 43s (611 task).
+
+3) Ket qua APK release:
+   - file: `GrapheneLauncher-release.apk` (= build/outputs/apk/noQuickstepStandalone/release/
+     graphene-port-noQuickstep-standalone-release.apk)
+   - dung luong: 12.260.277 byte (~11,7 MiB) - ban debug 93.618.411 byte (~89 MiB) => **giam 87%**
+   - sha256: 2843442da8cf9f413996b2a59f7566bccc246ca2a16c254c903545b085c1c0b1
+   - package: `app.graphene.launcher` (khac ban debug `app.graphene.launcher.debug`)
+     label "Graphene Launcher" (khong con chu "(Debug)")
+   - 1 file dex 7,5 MB (debug: 22 dex / 84 MB), zipalign 4: Verification successful
+   - ky bang cert giong ban debug; `application-debuggable` KHONG con
+   - quyen: y nguyen danh sach AOSP, khong co INTERNET
+   Lenh build: `./gradlew :assembleNoQuickstepStandaloneRelease --no-daemon`
+
+4) Test tren may (Pixel 8, GrapheneOS 17) - chi tiet `docs/screenshots/test_release.txt`,
+   `docs/screenshots/ram_widget.txt`, `docs/screenshots/widget_release2/3/4.txt`:
+   - `adb install -r -d` -> Success; set-home-activity -> Success (isDefault=true)
+   - khoi dong lanh: Status ok / COLD / **884 ms** (ban debug 1733-1901 ms)
+   - RAM (cold start + idle 12s): **PSS 183.955 KB (~180 MB)**, RSS 340.936 KB
+     (ban debug: PSS 248.781 KB (~243 MB), RSS 403.280 KB) => **giam ~26% PSS**
+   - crash buffer: 0 dong; log GrapheneApp gate dung nhu thiet ke
+   - home 9 node + hotseat + page indicator OK; drawer swipe len OK (grid + label)
+   - long-press nen: du 6 muc (Wallpaper & style / Widgets / Apps list / Create Folder /
+     Home organizer / Home settings)
+   - Widget picker (Compose, de vo khi R8): hien Facebook / Shopee / Quick Actions + tab
+     Featured/Browse -> OK
+   - Home settings (androidx.preference inflate tu XML, de vo khi R8): hien "Home settings",
+     "Notification dots", "Add app icons to home screen" -> OK
+   - **Bind widget**: bam "Add Facebook widget" -> dialog he thong "Create widget and allow
+     access?" (Application: Graphene Launcher / Widget: Facebook) -> tick Always allow + Create
+     -> log `LauncherAppWidgetHostView: App widget created with id: 10` /
+     `App widget with id: 10 loaded` / `AppWidgetServiceImpl: notify widget update for
+     com.facebook.katana` -> widget render du lieu that tren home -> long-press -> Remove ->
+     home sach 9 node, khong con appWidgetId => **widget van chay tot sau R8**.
+
+5) Cach go / quay lai:
+   - go ban release: `adb uninstall app.graphene.launcher`
+   - go ban debug (khong con can thiet): `adb uninstall app.graphene.launcher.debug`
+   - ve launcher goc: `adb shell cmd package set-home-activity com.android.launcher3/.uioverrides.QuickstepLauncher`
+   Luu y: 2 ban la 2 package khac nhau => du lieu layout rieng, khong tu chuyen sang nhau.
+
+================================================================================
+## PHAN 2C: SO SANH TOC DO - BAN PORT RELEASE vs LAUNCHER HE THONG
+================================================================================
+Do tren Pixel 8 (GrapheneOS 17) luc 00:24-00:33 ngay 20/09/2026.
+Bang chung: `docs/screenshots/speed_compare.txt`, `docs/screenshots/speed_round2.txt`, `docs/screenshots/home_lat_final.txt`.
+Lenh do: `bash docs/screenshots/speed_compare.sh`, `bash docs/screenshots/speed_round2.sh`, `bash docs/screenshots/home_lat_final.sh`.
+
+| Phep do                                     | Port release (user app)      | Launcher he thong GrapheneOS |
+|---------------------------------------------|------------------------------|------------------------------|
+| Cold start (process bi kill)                | **716 / 727 / 760 ms** (COLD, 3 lan) | khong do duoc (process thuong tru) |
+| Start khi process da song (HOT)             | 59 ms, roi 0 ms (resume)     | 25 ms, roi 0 ms (resume)     |
+| Bam HOME tu app khac -> co focus (cung cach) | **344 ms**                   | **356 ms**                   |
+| First frame theo ActivityTaskManager         | **+57 ms** (`Displayed`)     | khong log (chi resume)       |
+| Mo/dong drawer 3 lan: frames rendered        | 166 frames                   | 264 frames                   |
+| ... janky frames                             | 3 (1,81%)                    | 8 (3,03%)                    |
+| ... p50 / p90 / p99                          | 6 / 10 / 48 ms               | 7 / 13 / 57 ms               |
+| Missed vsync                                 | 0                            | 0                            |
+| RAM idle (PSS / RSS)                         | **215.815 / 362.044 KB**     | 292.768 / 458.480 KB         |
+| APK / thu muc cai                            | **11,7 MiB** (1 file)        | 18,4 MiB apk, thu muc 52 MB  |
+
+Nhan xet:
+- Dang dung binh thuong (process da song) thi hai ben **ngang nhau** (344 vs 356 ms khi bam
+  HOME, chenh nam trong sai so do; HOT start 0-59ms ca hai).
+- Khac biet that duy nhat: **cold start**. Ban port la app thuong nen he thong co the kill
+  (hoac it dung vai ngay -> bi thu hoi RAM) => lan bam HOME ke tiep mat **~0,72-0,76 s**.
+  Launcher he thong KHONG BAO GIO roi vao trang thai do: no la Recents provider nen duoc giu
+  thuong tru — da chung minh bang thi nghiem: `pidof` truoc `am kill-all` = 21119, sau
+  `am kill-all` van 21119, sau `am force-stop` he thong khoi dong lai ngay (pid moi 23453).
+- Bu lai: ban port **nhe RAM hon ~26% PSS**, APK nho hon ~37%, va **muot hon mot chut**
+  khi mo/dong drawer (p90 10 vs 13 ms, janky 1,81% vs 3,03%) vi khong ganh Quickstep/taskbar.
+
+
+
+
+

@@ -1,0 +1,144 @@
+================================================================================
+MỤC LỤC BẰNG CHỨNG — GRAPHENE LAUNCHER (bản port user-app)
+Cập nhật: 20/09/2026 · Máy: Pixel 8 (GrapheneOS 17 / Android 17, SDK 37)
+Thư mục dự án: ./
+Đọc nhanh: `less <file>` (thoát bằng q) hoặc `cat <file>`.
+================================================================================
+
+--------------------------------------------------------------------------------
+A. BÁO CÁO CHÍNH (đọc 4 file này là đủ nắm hết)
+--------------------------------------------------------------------------------
+SECURITY_AUDIT.md (9,3K)
+    Audit bảo mật: quyền, link ẩn http/https, thư viện mạng, code gửi dữ liệu,
+    dữ liệu lưu ở đâu, 6 điểm "nói cho trung thực"
+INSTALL.md (13K)
+    Cách cài / set home / gỡ app; bảng so sánh bản release vs debug;
+    bảng kết quả test; danh sách hạn chế
+PROGRESS.txt (28K)
+    Nhật ký toàn bộ: 23 mục lỗi build giai đoạn 1 + PHẦN 2A (audit) + PHẦN 2B (release)
+docs/audit/INDEX.txt
+    File này - mục lục bằng chứng
+
+--------------------------------------------------------------------------------
+B. BẰNG CHỨNG AUDIT BẢO MẬT (số liệu thô)
+--------------------------------------------------------------------------------
+tools/audit_src.txt (7,6K)
+    Quét toàn bộ source + resource:
+    [1] uses-permission trong 2 manifest -> KHÔNG có INTERNET
+    [2] tìm INTERNET / cleartext / networkSecurityConfig -> 0 kết quả
+    [3] mọi URL http/https trong src+res -> license AOSP, namespace, link comment
+    [5] API mạng trong src -> chỉ java.net.URISyntaxException
+    [7] exec / DexClassLoader / loadLibrary / Class.forName -> 3 chỗ, đều class hệ thống
+    [8] dependency tracker (firebase/crashlytics/okhttp/retrofit...) -> không có
+tools/audit_apk.txt (4,7K)
+    aapt2 dump badging + dump permissions của APK debug: danh sách quyền AOSP,
+    KHÔNG có INTERNET; 22 file dex; native lib chỉ androidx.graphics.path + libnrb
+tools/audit_dex.txt (1,5K)
+    Quét 1,3 triệu chuỗi trong dex: URL còn lại + bảng đếm
+    okhttp3=0 retrofit2=0 coil/=0 com/topjohnwu=0 firebase=0 crashlytics=0
+    HttpURLConnection=0 java/net/Socket=0 SslSocket=0 com/google/android/gms=0
+tools/audit_dex_detail.txt (1023K)
+    Chi tiết chuỗi nghi vấn đã phân loại:
+    - 'analytics', 'firebaseapp' -> trong public-suffix list của Guava (đuôi tên miền)
+    - 'java/net/URL', 'Socket', 'DatagramSocket' -> từ Guava/Kotlin/androidx.core
+    - 'org.chickenhook.restrictionbypass.*' + 'libnrb.so' -> hook API @hide (không mạng)
+docs/audit/perms_dev.txt (1,3K)
+    Quyền granted thật trên máy: RECEIVE_BOOT_COMPLETED, SET_WALLPAPER(_HINTS), VIBRATE,
+    REQUEST_DELETE_PACKAGES, QUERY_ALL_PACKAGES...; POST_NOTIFICATIONS/CALL_PHONE/
+    READ_EXTERNAL_STORAGE = granted=false; KHÔNG có dòng nào về mạng
+tools/audit.sh, tools/audit_apk.sh, tools/audit_dex.sh
+    Script tự chạy lại audit (bash tools/audit.sh; bash tools/audit_dex.sh)
+
+--------------------------------------------------------------------------------
+C. BẰNG CHỨNG BUILD RELEASE (R8 + minify)
+--------------------------------------------------------------------------------
+docs/audit/verify_release.txt (4,8K)
+    Kiểm tra APK release: 12.260.277 byte; "KHONG CO android.permission.INTERNET (sach)";
+    không còn application-debuggable; cert e2e73b94...195f07; 1 dex 7,5 MB; zipalign OK;
+    quét dex release: mọi thư viện mạng = 0
+docs/audit/release_final.txt (847B)
+    sha256 + dung lượng + zipalign bản release, so với bản debug (90M)
+docs/audit/missing_prefix.txt (90B)
+    Lỗi "Missing class" duy nhất làm R8 fail: com.android.wm.** (73) + libcore.** (1)
+    -> đã fix bằng -dontwarn trong proguard-rules.pro
+docs/audit/build_release.log (42K)
+    Log build release: > Task :minifyNoQuickstepStandaloneReleaseWithR8,
+    BUILD SUCCESSFUL in 43s, 611 task
+docs/audit/prep_release.txt (2,5K)
+    Cert của APK debug (khớp keystore nào) + 3 điểm getIdentifier + các điểm reflection
+    phải keep khi R8
+proguard-rules.pro (5,0K)
+    Rule R8 đã dùng cho bản release
+
+--------------------------------------------------------------------------------
+D. BẰNG CHỨNG TEST TRÊN MÁY THẬT
+--------------------------------------------------------------------------------
+docs/audit/test_release.txt (5,0K)
+    Cài release -> Success; set home -> isDefault=true; cold start 884 ms;
+    home 9 node + drawer + long-press menu 6 mục; crash buffer 0 dòng
+docs/audit/ram_widget.txt (4,0K)
+    So sánh RAM cold start + idle 12s: RELEASE PSS 183.955 KB / RSS 340.936 KB
+    vs DEBUG PSS 248.781 KB / RSS 403.280 KB; mở Widget picker
+docs/audit/extra_test.txt (3,5K)
+    Widget picker (Compose) + Home settings (androidx.preference inflate XML) +
+    quyền granted của bản release -> sống sót R8
+docs/audit/widget_release2.txt (947B)
+    Dialog hệ thống "Create widget and allow access?" (Application: Graphene Launcher /
+    Widget: Facebook), activity com.android.settings/.AllowBindAppWidgetActivity
+docs/audit/widget_release3.txt (3,0K)
+    Bind widget THÀNH CÔNG trên bản release:
+    "LauncherAppWidgetHostView: App widget created with id: 10",
+    "App widget with id: 10 loaded", "notify widget update for com.facebook.katana",
+    widget render dữ liệu thật trên home
+docs/audit/widget_release4.txt (1,6K)
+    Long-press widget -> Remove -> home sạch 9 node, không còn appWidgetId
+docs/audit/final_install.txt (2,7K)
+    GỠ BẢN DEBUG (Success) + xác nhận chỉ còn app.graphene.launcher, vẫn isDefault=true,
+    sha256 APK trên máy == GrapheneLauncher-release.apk, home 9 node, crash 0, PSS 181 MB
+docs/audit/final_check.txt (1,5K)
+    Trạng thái cuối: default home, tiến trình đang chạy, crash 0, danh sách file
+docs/audit/appwidget.txt (16K)
+    dumpsys appwidget trong lượt test widget ở bản debug (đối chiếu)
+docs/audit/ui1.txt ... ui10.txt
+    Dump UI từng bước test giai đoạn 1 (home, drawer, popup, widget)
+docs/audit/screen.png, screen2.png, screen3.png, screen4.png, screen5.png, screen6.png
+    Screenshot các bước test
+docs/audit/widget1.png (2,6M)
+    Screenshot widget đã bind trên home
+
+Script chạy lại test: docs/audit/test_release.sh, docs/audit/ram_widget.sh, docs/audit/extra_test.sh,
+docs/audit/finalize_install.sh, docs/audit/final_check.sh, tools/verify_release.sh,
+docs/audit/build_release.sh ; công cụ dump UI: docs/audit/ui.py
+
+--------------------------------------------------------------------------------
+D2. BẰNG CHỨNG SO SÁNH TỐC ĐỘ (port release vs launcher hệ thống)
+--------------------------------------------------------------------------------
+docs/audit/speed_compare.txt (1,6K)
+    Cold start ×3, mượt khung hình (gfxinfo) khi mở/đóng drawer ×3, RAM idle,
+    kích thước APK trên máy — cho cả 2 launcher
+docs/audit/speed_round2.txt (2,3K)
+    Warm/HOT start ×3 mỗi bên, thí nghiệm chứng minh launcher hệ thống là process
+    thường trú (pidof trước/sau am kill-all và am force-stop), dump events buffer
+docs/audit/home_lat_final.txt (1,1K)
+    Độ trễ bấm HOME (1 lần mỗi bên, cùng cách đo): port 344 ms vs hệ thống 356 ms
+Script: docs/audit/speed_compare.sh, docs/audit/speed_round2.sh, docs/audit/home_lat_final.sh
+
+--------------------------------------------------------------------------------
+E. GIAI ĐOẠN 1 (port + fix compile, 19/09)
+--------------------------------------------------------------------------------
+docs/audit/build5.log ... build25.log   - 21 lần build, log lỗi compile và cách fix
+docs/audit/badging.txt, docs/audit/apk.txt, docs/audit/verify.txt, docs/audit/verify_final.txt
+                                   - thông tin APK debug (badging, kích thước, sha)
+docs/audit/gradle_map.txt, docs/audit/gradle_mid.txt
+                                   - bản đồ cấu hình build.gradle (trước khi thêm release)
+docs/audit/ss_diff.txt, docs/audit/ss_orig.txt, docs/audit/ss_port.txt
+                                   - so sánh SystemShortcut.java giữa bản gốc và bản port
+docs/audit/aw2.txt, docs/audit/aw2g.txt      - dumpsys appwidget trước/sau khi gỡ widget
+
+--------------------------------------------------------------------------------
+F. RÁC - KHÔNG CẦN ĐỌC
+--------------------------------------------------------------------------------
+Các file dùng 1 lần như docs/audit/x*.txt, y*.txt, z*.txt, e*.txt, v*.txt, w*.txt, t*.txt,
+u*.txt, b*.txt (không phải build*.log), dirs.txt, desc*.txt, dev.txt, cc.txt, ac408.txt,
+aprv.txt, dc*.txt, aosp_colors.xml, vendor.log, win.xml... chỉ là output tạm khi dò lỗi.
+Muốn dọn thì xoá, không ảnh hưởng gì.

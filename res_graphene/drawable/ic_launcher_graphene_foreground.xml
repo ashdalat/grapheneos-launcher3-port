@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mang graphene: luc giac ngoai (khung), luc giac trong (o carbon) + 3 lien ket -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M54,26L76.5,39v26L54,78L31.5,65V39Z"
+        android:strokeColor="#34D399"
+        android:strokeWidth="4.5"
+        android:strokeLineJoin="round" />
+    <path
+        android:fillColor="#34D399"
+        android:pathData="M54,42L64.4,48v12L54,66L43.6,60V48Z" />
+    <path
+        android:fillColor="#A7F3D0"
+        android:pathData="M54,51.5m-3.2,0a3.2,3.2 0,1 1,6.4 0a3.2,3.2 0,1 1,-6.4 0" />
+    <path
+        android:fillColor="#5EEAD4"
+        android:pathData="M43.6,37.5m-2.4,0a2.4,2.4 0,1 1,4.8 0a2.4,2.4 0,1 1,-4.8 0" />
+    <path
+        android:fillColor="#5EEAD4"
+        android:pathData="M64.4,70.5m-2.4,0a2.4,2.4 0,1 1,4.8 0a2.4,2.4 0,1 1,-4.8 0" />
+</vector>

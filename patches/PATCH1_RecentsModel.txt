@@ -1,0 +1,13 @@
+PATCH 1 — RecentsModel guard (copy Lawnchair RecentsModel.java:186-199).
+File goc: grapheneos-launcher3-17/quickstep/src/com/android/quickstep/RecentsModel.kt:106
+  taskStackChangeListeners.registerTaskStackListener(this)
+Doi thanh:
+  try {
+      if (app.graphene.launcher.GrapheneApp.isRecentsEnabled()) {
+          taskStackChangeListeners.registerTaskStackListener(this)
+      }
+  } catch (Throwable t) {
+      android.util.Log.w("RecentsModel", "registerTaskStackListener failed (user-app?)", t)
+  }
+Ly do: user-app khong phai recents provider -> khong dang ky, khong crash.
+Lawnchair lam y vay o RecentsModel.java:186.

@@ -1,0 +1,308 @@
+import com.android.build.gradle.api.AndroidBasePlugin
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+// ============================================================================
+// GrapheneOS Launcher3 (branch 17) -> user app, build bang Gradle.
+//
+// Khac biet so voi Soong (Android.bp):
+//   platform_apis:true / privileged:true  -> BO, de chay nhu app thuong
+//   system_ext_specific / overrides Home  -> BO (khong ghi de launcher he thong)
+//   protologtool + aconfig genrule        -> thay bang protobuf lite + module flags
+//   Soong static_libs                     -> Gradle project(...) hoac jar prebuilt
+// ============================================================================
+
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.parcelize)
+    alias(libs.plugins.google.ksp)
+    alias(libs.plugins.google.protobuf)
+    alias(libs.plugins.rikka.refine)
+}
+
+allprojects {
+    plugins.withType(AndroidBasePlugin).configureEach {
+        android {
+            buildToolsVersion "37.0.0"
+            compileSdk {
+                version = release(37) {
+                    minorApiLevel = 2
+                }
+            }
+            defaultConfig {
+                minSdk = 30
+                targetSdk = 37
+                vectorDrawables.useSupportLibrary = true
+            }
+            lint {
+                abortOnError false
+                checkReleaseBuilds false
+            }
+            compileOptions {
+                sourceCompatibility = libs.versions.jdkRelease.get()
+                targetCompatibility = libs.versions.jdkRelease.get()
+            }
+        }
+        dependencies {
+            implementation libs.androidx.core.ktx
+            implementation libs.androidx.core.animation
+        }
+    }
+
+    plugins.withId('com.google.protobuf') {
+        protobuf {
+            protoc {
+                artifact = libs.protobuf.protoc.get().toString()
+            }
+            generateProtoTasks {
+                all().configureEach { task ->
+                    task.builtins {
+                        java {
+                            option "lite"
+                        }
+                    }
+                }
+            }
+        }
+        dependencies {
+            implementation libs.protobuf.javalite
+        }
+    }
+
+    tasks.withType(KotlinCompile).configureEach {
+        compilerOptions {
+            jvmDefault = JvmDefaultMode.ENABLE
+            jvmTarget = JvmTarget.fromTarget(libs.versions.jdkRelease.get())
+        }
+    }
+
+    ext {
+        FRAMEWORK_PREBUILTS_DIR = "$rootDir/prebuilts/libs"
+
+        addFrameworkJar = { String name ->
+            def frameworkJar = new File(FRAMEWORK_PREBUILTS_DIR, name)
+            if (!frameworkJar.exists()) {
+                throw new IllegalArgumentException(
+                        "Framework jar path ${frameworkJar.path} doesn't exist")
+            }
+            gradle.projectsEvaluated {
+                tasks.withType(JavaCompile).configureEach {
+                    classpath = files(frameworkJar, classpath)
+                }
+                tasks.withType(KotlinCompile).configureEach {
+                    libraries.setFrom files(frameworkJar, libraries)
+                }
+            }
+            dependencies {
+                compileOnly files(frameworkJar)
+            }
+        }
+
+        compileOnlyCommonJars = {
+            dependencies {
+                compileOnly fileTree(dir: FRAMEWORK_PREBUILTS_DIR, include: 'SystemUI-core-*.jar')
+                compileOnly fileTree(dir: FRAMEWORK_PREBUILTS_DIR, include: 'SystemUI-statsd-*.jar')
+                compileOnly fileTree(dir: FRAMEWORK_PREBUILTS_DIR, include: 'WindowManager-Shell-*.jar')
+                compileOnly fileTree(dir: FRAMEWORK_PREBUILTS_DIR, include: 'framework-*.jar')
+            }
+        }
+    }
+}
+
+// ============================================================================
+// Root project = app module (giong cach Lawnchair lam), khong dung :app
+// ============================================================================
+android {
+    namespace "com.android.launcher3"
+    defaultConfig {
+        versionCode 17_00_01_00_00
+        versionName "17.0-port-1"
+        manifestPlaceholders.quickstepMinSdk = "0"
+        manifestPlaceholders.quickstepMaxSdk = "100000"
+
+        // Tuong duong tools/buildconfig.sh cua Soong
+        buildConfigField "boolean", "IS_STUDIO_BUILD", "true"
+        buildConfigField "boolean", "QSB_ON_FIRST_SCREEN", "false"
+        buildConfigField "boolean", "IS_DEBUG_DEVICE", "false"
+        buildConfigField "boolean", "WIDGETS_ENABLED", "true"
+        buildConfigField "boolean", "NOTIFICATION_DOTS_ENABLED", "true"
+    }
+
+    buildFeatures {
+        aidl true
+        buildConfig true
+        resValues true
+    }
+
+    // Ky APK release bang CHINH debug keystore cua may build (~/.android/debug.keystore).
+    // Ly do: ban debug dang cai tren may cung duoc ky bang cert nay
+    // (SHA-256 E2:E7:3B:94:...:5F:07) => moi lan build lai deu nang cap duoc bang
+    // `adb install -r`, khong phai go app / mat du lieu.
+    // Khong dung keystore rieng vi day la app ca nhan, khong phat hanh qua store.
+    signingConfigs {
+        userKey {
+            storeFile file(System.getProperty("user.home") + "/.android/debug.keystore")
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
+    }
+
+    buildTypes {
+        debug {
+            applicationIdSuffix ".debug"
+            resValue("string", "derived_app_name", "Graphene Launcher (Debug)")
+        }
+        release {
+            // ==== Toi uu dung luong/RAM: R8 xoa code khong dung + thu gon resource ====
+            minifyEnabled true
+            shrinkResources true
+            signingConfig signingConfigs.userKey
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
+                    'proguard-rules.pro'
+            // Ban release KHONG debuggable (attribute android:debuggable trong manifest
+            // da bo; AGP tu them cho build type debug).
+            resValue("string", "derived_app_name", "Graphene Launcher")
+        }
+    }
+
+    flavorDimensions += ["recents", "channel"]
+
+    productFlavors {
+        withQuickstep {
+            dimension "recents"
+            minSdk = 30
+        }
+        noQuickstep {
+            dimension "recents"
+            minSdk = 30
+        }
+        standalone {
+            dimension "channel"
+            applicationId 'app.graphene.launcher'
+        }
+    }
+
+    sourceSets {
+        main {
+            res.srcDirs = ['res', 'res_graphene']
+            java.srcDirs = ['src', 'src_plugins', 'src_testing_shared']
+            // AGP 9 built-in Kotlin: phai khai bao rieng thu muc Kotlin,
+            // neu khong task Kotlin se bao NO-SOURCE (=> thieu class -> Java loi hang loat).
+            kotlin.directories.addAll('src', 'src_plugins', 'src_testing_shared')
+            manifest.srcFile 'AndroidManifest-common.xml'
+            proto {
+                srcDirs = ['protos/', 'protos_overrides/']
+            }
+            aidl.srcDirs = ['src']
+        }
+        noQuickstep {
+            java.srcDirs = ['src_no_quickstep']
+            kotlin.directories.add('src_no_quickstep')
+            manifest.srcFile 'AndroidManifest.xml'
+        }
+        withQuickstep {
+            res.srcDirs = ['quickstep/res']
+            java.srcDirs = ['quickstep/src', 'quickstep/dagger', 'quickstep/src_protolog']
+            kotlin.directories.addAll('quickstep/src', 'quickstep/dagger', 'quickstep/src_protolog')
+            manifest.srcFile 'quickstep/AndroidManifest.xml'
+        }
+    }
+
+    packagingOptions.resources.excludes += [
+            "**/*.proto",
+            "**/*.bin",
+            "**/*.java",
+            "**/*.properties",
+            "META-INF/services/**",
+            "META-INF/licenses/**",
+            "META-INF/AL2.0",
+            "META-INF/LGPL2.1",
+    ]
+}
+
+addFrameworkJar('framework-16.jar')
+
+dependencies {
+    // ==== AOSP libs: iconloader_base, view_capture, animationlib,
+    //      contextualeducationlib, mechanics, msdl, dynamiccolors, cuebarlib
+    implementation projects.iconloaderlib
+    implementation projects.animationlib
+    implementation projects.msdllib
+    implementation projects.contextualeducationlib
+    implementation projects.viewcapturelib
+    implementation projects.displaylib
+    implementation projects.mechanics
+    implementation projects.dynamiccolors
+    implementation projects.cuebarlib
+
+    // ==== SystemUI-statsd / SystemUISharedLib / PluginCoreLib / widget_picker_component
+    implementation fileTree(dir: FRAMEWORK_PREBUILTS_DIR, include: 'SystemUI-statsd-16.jar')
+    implementation fileTree(dir: FRAMEWORK_PREBUILTS_DIR, include: 'WindowManager-Shell-16.jar')
+    compileOnly fileTree(dir: FRAMEWORK_PREBUILTS_DIR, include: 'SystemUI-core-16.jar')
+
+    implementation projects.shared
+    implementation projects.plugincore
+    implementation projects.log
+    implementation projects.utils
+    implementation projects.common
+    implementation projects.flags
+    // wmshell (AOSP WindowManager Shell) chi can cho Recents/Quickstep.
+    // Ban HOME (noQuickstep) dung jar WindowManager-Shell-16.jar o tren.
+    withQuickstepImplementation projects.wmshell
+    implementation projects.dagger
+    implementation projects.concurrent
+    implementation projects.widgetpicker
+
+    // ==== Recents (Quickstep) - chi link khi build flavor withQuickstep
+    withQuickstepCompileOnly projects.hiddenApi
+    withQuickstepImplementation projects.animation
+    withQuickstepImplementation projects.unfold
+    withQuickstepCompileOnly projects.plugin
+    withQuickstepImplementation projects.compatLib
+    withQuickstepImplementation projects.compatLib.compatLibVQ
+    withQuickstepImplementation projects.compatLib.compatLibVR
+    withQuickstepImplementation projects.compatLib.compatLibVS
+    withQuickstepImplementation projects.compatLib.compatLibVT
+    withQuickstepImplementation projects.compatLib.compatLibVU
+    withQuickstepImplementation projects.compatLib.compatLibVV
+    withQuickstepImplementation projects.compatLib.compatLibVBaklava
+    withQuickstepCompileOnly fileTree(dir: FRAMEWORK_PREBUILTS_DIR, include: 'framework-16.jar')
+
+    // ==== AndroidX / khac
+    implementation libs.androidx.recyclerview
+    implementation libs.androidx.preference.ktx
+    implementation libs.androidx.constraintlayout
+    implementation libs.androidx.dynamicanimation
+    implementation libs.androidx.window
+    implementation libs.androidx.lifecycle.common
+    implementation libs.androidx.slice.core
+    implementation libs.androidx.graphics.shapes
+    implementation libs.dagger.hilt.android
+    implementation projects.usertypelib
+    implementation libs.google.material
+    implementation libs.kotlinx.coroutines.android
+    implementation libs.javax.inject
+    implementation libs.dagger
+    ksp libs.dagger.compiler
+    implementation libs.google.guava
+    // javax.annotation.concurrent.ThreadSafe (dung trong SettingsCache/Executors)
+    implementation "com.google.code.findbugs:jsr305:3.0.2"
+    implementation libs.chickenhook.restrictionbypass
+    implementation libs.rikka.refine.runtime
+    implementation libs.protobuf.javalite
+
+    // ==== Compose (Launcher3 A17 dung cho WidgetPicker/Preview)
+    implementation platform(libs.compose.bom)
+    implementation libs.compose.ui
+    implementation libs.compose.foundation
+    implementation libs.compose.material3
+    implementation libs.compose.material.icons
+    implementation libs.compose.ui.tooling.preview
+    implementation libs.androidx.activity.compose
+    implementation libs.androidx.navigation.compose
+}

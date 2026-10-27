@@ -1,0 +1,4 @@
+PATCH 3 — Widget: Graphene 17 da co san startBindFlow (AddItemActivity.kt:210-216).
+Khong can sua code widget. Chi can dam bao Manifest xin BIND_APPWIDGET
++ khi bindAppWidgetIdIfAllowed tra false thi startBindFlow mo dialog.
+User-app chon OK la bind duoc. KIEM TRA XONG, KHONG SUA.

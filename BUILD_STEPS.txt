@@ -1,0 +1,31 @@
+STEPS CHAY DUOC APK (copy-paste tung khoi):
+
+# 0. Vao thu muc port
+cd ./
+
+# 1. Copy modules Lawnchair (system stub) vao port
+for m in platform_frameworks_libs_systemui systemUI compatLib hidden-api flags wmshell dagger concurrent androidx-lib modules baseline-profile; do cp -r ../lawnchair-ref/$m ./; done
+ls platform_frameworks_libs_systemui systemUI compatLib | head
+
+# 2. Dung settings chuan (da tao settings.gradle.new)
+cp settings.gradle.new settings.gradle
+
+# 3. Dung build.gradle goc Lawnchair lam root (doi ten project)
+cp ../lawnchair-ref/build.gradle ./build.gradle.lawn-origin
+
+# 4. Tao app tu source Graphene 17 + manifest + res
+mkdir -p app
+cp app.build.gradle.example app/build.gradle
+mkdir -p app/src app/res app/quickstep app/src_no_quickstep app/src_build_config
+cp -r ../grapheneos-launcher3-17/src/* app/src/
+cp -r ../grapheneos-launcher3-17/res/* app/res/
+cp -r ../grapheneos-launcher3-17/quickstep/* app/quickstep/ 2>/dev/null
+cp -r ../grapheneos-launcher3-17/src_no_quickstep/* app/src_no_quickstep/ 2>/dev/null
+cp ../grapheneos-launcher3-17/AndroidManifest-common.xml app/
+cp ../grapheneos-launcher3-17/AndroidManifest.xml app/
+cp patches/GrapheneApp.java app/src/app/graphene/launcher/GrapheneApp.java
+cp patches/BuildConfig.java app/src_build_config/com/android/launcher3/BuildConfig.java
+
+# 5. Build flavor nhe truoc (khong recents, kieu Neo)
+./gradlew :app:assembleGrapheneNoQuickstepStandaloneDebug
+adb install -r app/build/outputs/apk/*/debug/*.apk

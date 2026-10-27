@@ -1,0 +1,10 @@
+PATCH 5 — Manifest + GRID_CONTROL knownSigner (branch 17 moi).
+- File: grapheneos-launcher3-17/AndroidManifest-common.xml:52-57
+  permission GRID_CONTROL protectionLevel signature|knownSigner,
+  knownCerts @array/grid_control_known_signers.
+- Loi user-app: knownSigner can ky debug khong khop -> mat quyen dieu khien grid.
+  Khong crash, chi mat tinh nang Wallpaper pick grid.
+- Lawnchair giu nguyen, khong sua. KIEM TRA XONG, KHONG SUA.
+- File app: AndroidManifest-common.xml doi android:name thanh
+  app.graphene.launcher.GrapheneApp (thay LauncherApplication).
+  File mau: patches/GrapheneAppManifest.xml (merge bang manifest merger).

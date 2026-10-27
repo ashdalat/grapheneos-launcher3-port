@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Mau private cua framework - ban dark.
+  SINH TU DONG boi tools/vendor_private_colors.py - KHONG sua tay.
+  Gia tri goc: AOSP frameworks/base core/res/res/values/colors.xml (branch 17).
+-->
+<resources>
+    <color name="dcv_system_brand_a_dark">#B8C6EE</color>
+    <color name="dcv_system_brand_a_light">#485B88</color>
+    <color name="dcv_system_brand_b_dark">#FAF8FF</color>
+    <color name="dcv_system_brand_b_light">#A4ABC1</color>
+    <color name="dcv_system_brand_c_dark">#8693B9</color>
+    <color name="dcv_system_brand_c_light">#6476A5</color>
+    <color name="dcv_system_brand_d_dark">#EFDBFF</color>
+    <color name="dcv_system_brand_d_light">#9983AF</color>
+    <color name="dcv_system_clock_hour_dark">#B8C6EE</color>
+    <color name="dcv_system_clock_hour_light">#373D50</color>
+    <color name="dcv_system_clock_minute_dark">#D9E2FF</color>
+    <color name="dcv_system_clock_minute_light">#425480</color>
+    <color name="dcv_system_clock_second_dark">#EFDBFF</color>
+    <color name="dcv_system_clock_second_light">#6A567F</color>
+    <color name="dcv_system_on_shade_active_dark">#0B1A3A</color>
+    <color name="dcv_system_on_shade_active_light">#516391</color>
+    <color name="dcv_system_on_shade_active_variant_dark">#394668</color>
+    <color name="dcv_system_on_shade_active_variant_light">#334671</color>
+    <color name="dcv_system_on_shade_inactive_dark">#A9ABB5</color>
+    <color name="dcv_system_on_shade_inactive_light">#E1E2ED</color>
+    <color name="dcv_system_on_shade_inactive_variant_dark">#C5C6D0</color>
+    <color name="dcv_system_on_shade_inactive_variant_light">#C5C6D0</color>
+    <color name="dcv_system_on_theme_app_dark">#B8C6EE</color>
+    <color name="dcv_system_on_theme_app_light">#263963</color>
+    <color name="dcv_system_overview_background_dark">#50525B</color>
+    <color name="dcv_system_overview_background_light">#C5C6D0</color>
+    <color name="dcv_system_shade_active_dark">#D9E2FF</color>
+    <color name="dcv_system_shade_active_light">#D9E2FF</color>
+    <color name="dcv_system_shade_disabled_dark">#0D0E12</color>
+    <color name="dcv_system_shade_disabled_light">#0D0E12</color>
+    <color name="dcv_system_shade_inactive_dark">#2F3035</color>
+    <color name="dcv_system_shade_inactive_light">#2F3035</color>
+    <color name="dcv_system_surface_effect_0_dark">#223050</color>
+    <color name="dcv_system_surface_effect_0_fallback_dark">#2A3042</color>
+    <color name="dcv_system_surface_effect_0_fallback_light">#C0C6DC</color>
+    <color name="dcv_system_surface_effect_0_light">#D9E2FF</color>
+    <color name="dcv_system_surface_effect_1_dark">#121317</color>
+    <color name="dcv_system_surface_effect_1_light">#FAF8FE</color>
+    <color name="dcv_system_surface_effect_2_dark">#D9E2FF</color>
+    <color name="dcv_system_surface_effect_2_light">#FFFFFF</color>
+    <color name="dcv_system_surface_effect_3_dark">#D9E2FF</color>
+    <color name="dcv_system_surface_effect_3_light">#4B5D8B</color>
+    <color name="dcv_system_theme_app_dark">#2A3042</color>
+    <color name="dcv_system_theme_app_light">#B9CBFF</color>
+    <color name="dcv_system_theme_app_ring_dark">#9DABD1</color>
+    <color name="dcv_system_theme_app_ring_light">#98AADC</color>
+    <color name="dcv_system_theme_notif_dark">#AC95C2</color>
+    <color name="dcv_system_theme_notif_light">#D5BDEC</color>
+    <color name="dcv_system_under_surface_dark">#000000</color>
+    <color name="dcv_system_under_surface_light">#000000</color>
+    <color name="dcv_system_weather_temp_dark">#B8C6EE</color>
+    <color name="dcv_system_weather_temp_light">#4B5D8B</color>
+    <color name="dcv_system_widget_background_dark">#2A3042</color>
+    <color name="dcv_system_widget_background_light">#EEF0FF</color>
+</resources>

@@ -1,0 +1,16 @@
+=== APK release chot (GrapheneLauncher-release.apk) ===
+-rw-r--r-- 1 pc pc 12260277 00:06 20 Thg 9  GrapheneLauncher-release.apk
+2843442da8cf9f413996b2a59f7566bccc246ca2a16c254c903545b085c1c0b1  GrapheneLauncher-release.apk
+12M	GrapheneLauncher-release.apk
+
+=== zipalign 4 (phai la 'Verification succesful') ===
+ 9784128 resources.arsc (OK)
+Verification successful
+
+=== So sanh ban debug ===
+-rw-r--r-- 1 pc pc 93618411 23:25 19 Thg 9  GrapheneLauncher-debug.apk
+90M	GrapheneLauncher-debug.apk
+
+=== build output that (khong phai ban copy) ===
+-rw-r--r-- 1 pc pc 12260277 00:05 20 Thg 9  build/outputs/apk/noQuickstepStandalone/release/graphene-port-noQuickstep-standalone-release.apk
+2843442da8cf9f413996b2a59f7566bccc246ca2a16c254c903545b085c1c0b1  build/outputs/apk/noQuickstepStandalone/release/graphene-port-noQuickstep-standalone-release.apk

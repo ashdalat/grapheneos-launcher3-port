@@ -1,0 +1,47 @@
+APK: GrapheneLauncher-debug.apk
+dex size: 84M   strings: 1303438 dong
+
+===== [1] URL trong dex =====
+      2 http://schemas.android.com/apk/res/android
+      2 http://
+      1 http://xmlpull.org/v1/doc/features.html#indent-output
+      1 http://www.w3.org/2000/svg
+      1 https://youtrack.jetbrains.com/issue/KT-67202
+      1 https://youtrack.jetbrains.com/issue/KT-55980
+      1 https://youtrack.jetbrains.com/issue/KT-46465
+      1 https://r.android.com/3610053
+      1 https://goo.gle/compose-feedback
+      1 http://schemas.android.com/apk/res-auto/com.android.launcher3
+      1 http://schemas.android.com/apk/res-auto
+      1 https://bottosson.github.io/posts/oklab/#converting-from-linear-srgb-to-oklab
+      1 https://
+
+===== [2] Ten class dang nghi van (so dong chua chuoi) =====
+okhttp3                  0
+retrofit2                0
+retrofit                 0
+coil/                    0
+com/topjohnwu            0
+libsu                    0
+firebase                 1
+crashlytics              0
+analytics                7
+HttpURLConnection        0
+java/net/URL             8
+java/net/Socket          5
+WebView                  1
+SslSocket                0
+com/google/android/gms   0
+androidx/work            0
+ChickenHook              0
+RestrictionBypass        3
+rikka                    2
+
+===== [3] Ten host/domain xuat hien trong dex =====
+bottosson.github.io/
+developer.android.com
+r.android.com/
+schemas.android.com/
+www.w3.org/
+xmlpull.org/
+youtrack.jetbrains.com/

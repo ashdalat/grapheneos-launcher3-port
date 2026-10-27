@@ -1,0 +1,19 @@
+plugins {
+    id 'com.android.library'
+    id 'kotlin-parcelize'
+}
+
+// UserTypeLib (AOSP: frameworks/libs/systemui/usertypelib) - ban Gradle hoa.
+// iconloaderlib A17 can `com.android.users.UserType`.
+android {
+    namespace "com.android.users"
+    sourceSets {
+        main {
+            java.srcDirs = ['src']
+            kotlin.directories.add('src')
+            manifest.srcFile 'AndroidManifest.xml'
+        }
+    }
+}
+
+addFrameworkJar('framework-16.jar')

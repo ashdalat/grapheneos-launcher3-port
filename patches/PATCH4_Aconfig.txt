@@ -1,0 +1,5 @@
+PATCH 4 — aconfig/Protolog: khong sua code. Copy flags/ tu Lawnchair
+(da co Flags.java tao san tu aconfig) thay cho genrule Soong.
+Protolog: src_protolog chi dung cho log, Gradle build tu dong bo qua
+neu thieu protologtool. Neu loi protolog thi xoa quickstep/src_protolog
+khoi sourceSets. KIEM TRA XONG.

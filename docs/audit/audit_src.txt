@@ -1,0 +1,120 @@
+nohup: ignoring input
+########## [1] PERMISSION TRONG MANIFEST GOC ##########
+AndroidManifest.xml:30:    <permission android:name="${applicationId}.permission.START_WIDGET_PICKER_ACTIVITY"
+AndroidManifest-common.xml:33:    <uses-permission android:name="android.permission.CALL_PHONE" />
+AndroidManifest-common.xml:34:    <uses-permission android:name="android.permission.SET_WALLPAPER" />
+AndroidManifest-common.xml:35:    <uses-permission android:name="android.permission.SET_WALLPAPER_HINTS" />
+AndroidManifest-common.xml:36:    <uses-permission android:name="android.permission.BIND_APPWIDGET" />
+AndroidManifest-common.xml:37:    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+AndroidManifest-common.xml:38:    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+AndroidManifest-common.xml:39:    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+AndroidManifest-common.xml:40:    <uses-permission android:name="android.permission.READ_DEVICE_CONFIG" />
+AndroidManifest-common.xml:41:    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+AndroidManifest-common.xml:42:    <uses-permission android:name="android.permission.VIBRATE"/>
+AndroidManifest-common.xml:44:    <uses-permission android:name="android.permission.ROTATE_SURFACE_FLINGER" />
+AndroidManifest-common.xml:45:    <uses-permission android:name="android.permission.WAKEUP_SURFACE_FLINGER" />
+AndroidManifest-common.xml:46:    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+AndroidManifest-common.xml:47:    <uses-permission android:name="android.permission.LOCK_APPS" />
+AndroidManifest-common.xml:48:    <uses-permission android:name="com.android.systemui.permission.LAUNCH_ACCESSIBILITY_SHORTCUT_CHOOSER_DIALOG" />
+AndroidManifest-common.xml:50:    <permission
+AndroidManifest-common.xml:55:    <uses-permission android:name="${applicationId}.permission.GRID_CONTROL" />
+
+########## [2] INTERNET / cleartext / networkSecurityConfig ##########
+-- het (khong in dong nao = KHONG CO INTERNET) --
+
+########## [3] URL http/https trong src+res+flags (minh kiem soat) ##########
+    967 8:http://www.apache.org/licenses/LICENSE-2.0
+    127 16:http://schemas.android.com/apk/res/android
+     98 10:http://www.apache.org/licenses/LICENSE-2.0
+     96 20:http://schemas.android.com/apk/res/android
+     86 17:http://schemas.android.com/apk/res/android
+     66 9:http://www.apache.org/licenses/LICENSE-2.0
+     49 18:http://schemas.android.com/apk/res/android
+     18 2:http://schemas.android.com/apk/res/android
+     12 7:http://www.apache.org/licenses/LICENSE-2.0
+     12 2:http://schemas.android.com/apk/res-auto
+     12 11:http://www.apache.org/licenses/LICENSE-2.0
+     11 19:http://schemas.android.com/apk/res-auto
+     11 18:http://schemas.android.com/apk/res-auto
+      9 3:http://schemas.android.com/apk/res/android
+      9 1:http://schemas.android.com/apk/res/android
+      7 21:http://schemas.android.com/apk/res/android
+      7 17:http://schemas.android.com/apk/res-auto/com.android.launcher3
+      6 15:http://schemas.android.com/apk/res/android
+      4 19:http://schemas.android.com/apk/res/android
+      3 16:http://schemas.android.com/apk/res-auto
+      2 63:http://www.example.com/
+      2 50:http://www.example.com/
+      2 3:http://schemas.android.com/apk/res-auto
+      2 22:http://schemas.android.com/apk/res/android
+      2 18:http://schemas.android.com/apk/res-auto/com.android.launcher3
+      2 17:http://schemas.android.com/apk/res-auto
+      1 96:http://b/465503610
+      1 83:http://schemas.android.com/apk/res-auto/com.android.launcher3
+      1 831:https://developer.android.com/topic/performance/vitals/launch-time#warm
+      1 81:http://xmlpull.org/v1/doc/features.html#indent-output
+      1 80:https://developer.android.com/reference/android/view/DragEvent
+      1 6:http://www.apache.org/licenses/LICENSE-2.0
+      1 67:http://schemas.android.com/apk/res-auto/com.android.launcher3
+      1 60:http://www.example.com/
+      1 59:http://b/465503610
+      1 4:http://schemas.android.com/apk/res/android
+      1 21:http://schemas.android.com/apk/res-auto
+      1 20:http://schemas.android.com/apk/res-auto
+      1 16:http://schemas.android.com/apk/androidx.appfunctions
+      1 16:http://schemas.android.com/aapt
+-- het --
+
+########## [4] URL http/https trong cac lib AOSP duoc compile ##########
+   1777 8:http://www.apache.org/licenses/LICENSE-2.0
+     43 7:http://www.apache.org/licenses/LICENSE-2.0
+      2 9:http://www.apache.org/licenses/LICENSE-2.0
+      2 26:http://www.apache.org/licenses/LICENSE-2.0
+      2 10:http://www.apache.org/licenses/LICENSE-2.0
+      1 86:https://policies.google.com/terms?hl=
+      1 84:https://policies.google.com/privacy/embedded?hl=
+      1 79:https://carbon.googleplex.com/predictive-back-for-apps/pages/at-3-bottom-sheets
+      1 65:https://carbon.googleplex.com/predictive-back-for-apps/pages/st-4-floating-system-surfaces
+      1 51:https://carbon.googleplex.com/predictive-back-for-apps/pages/st-3-inner-area-dismiss
+      1 48:https://developer.android.com/guide/topics/large-screens/learn-about-foldables
+      1 487:https://policies.google.com/terms?hl=
+      1 484:https://policies.google.com/privacy/embedded?hl=
+      1 37:https://github.com/LawnchairLauncher/lawnchair/issues/6817
+      1 37:https://developer.android.com/guide/topics/large-screens/learn-about-foldables
+      1 37:https://carbon.googleplex.com/predictive-back-for-apps/pages/st-2-cross-task
+      1 23:https://carbon.googleplex.com/predictive-back-for-apps/pages/st-1-dismiss-app
+      1 22:http://b/235886078
+      1 161:http://shortn/_uNSbDoRUSr.
+      1 1333:https://developer.android.com/guide/components/aidl#Bundles
+-- het --
+
+########## [5] API MANG trong src+res+flags ##########
+src/com/android/launcher3/DefaultLayoutParser.java:28:import java.net.URISyntaxException;
+src/com/android/launcher3/SecondaryDropTarget.java:49:import java.net.URISyntaxException;
+src/com/android/launcher3/model/DatabaseHelper.java:57:import java.net.URISyntaxException;
+-- het --
+
+########## [6] API MANG trong lib AOSP ##########
+quickstep/src/com/android/quickstep/interaction/AllSetActivity.java:106:import java.net.URISyntaxException;
+-- het --
+
+########## [7] EXEC / native / dex / Class.forName trong src ##########
+src/com/android/launcher3/Utilities.java:540:            Class clazz = Class.forName("android.os.SystemProperties");
+src/com/android/launcher3/util/A17Compat.java:19:            return (boolean) Class.forName("android.security.Flags")
+src/app/graphene/launcher/GrapheneApp.java:81:            final Class<?> contract = Class.forName("com.android.quickstep.QuickStepContract");
+-- het --
+
+########## [8] DEPENDENCY: tracker/analytics/mang ##########
+gradle/libs.versions.toml:11:retrofit = "3.0.0"
+gradle/libs.versions.toml:104:retrofit-core = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+gradle/libs.versions.toml:105:retrofit-converter-kotlinx = { group = "com.squareup.retrofit2", name = "converter-kotlinx-serialization", version.ref = "retrofit" }
+gradle/libs.versions.toml:106:okhttp = "com.squareup.okhttp3:okhttp:5.5.0"
+gradle/libs.versions.toml:163:retrofit = ["retrofit-core", "retrofit-converter-kotlinx", "okhttp"]
+-- het (khong in dong nao = khong co tracker) --
+
+########## [9] SCRIPT _work CO GOI MANG? ##########
+_work/vendor_private_colors.py:18:# 1. Doc gia tri that tu found.txt (da curl tu AOSP 17)
+_work/audit.sh:52:grep -rnE 'requests\.|urllib|socket|curl |wget ' _work/*.py _work/*.sh 2>/dev/null | head -20
+-- het --
+
+########## [10] FILE assets/co the chua JS/HTML ##########

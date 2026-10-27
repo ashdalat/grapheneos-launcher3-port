@@ -1,0 +1,18 @@
+PATCH 2 — TouchInteractionService guard (onBind tra null khi khong phai provider).
+File goc: grapheneos-launcher3-17/quickstep/src/com/android/quickstep/TouchInteractionService.kt:35-46
+  override fun onCreate() { component = ...build() ... }
+  override fun onBind(intent: Intent): IBinder = component.binder
+Doi thanh:
+  override fun onCreate() {
+      try {
+          if (!app.graphene.launcher.GrapheneApp.isRecentsEnabled()) return
+          component = appComponent.sysUIConnectionComponentBuilder...
+      } catch (Throwable t) { Log.w("TIS", "skip init (user-app)", t) }
+  }
+  override fun onBind(intent: Intent): IBinder? {
+      return try {
+          if (!app.graphene.launcher.GrapheneApp.isRecentsEnabled()) null else component.binder
+      } catch (Throwable t) { null }
+  }
+Ly do: STATUS_BAR_SERVICE chi system bind duoc. User-app tra null -> HOME thuong.
+Lawnchair giu service nhung gate bang isRecentsEnabled + sRecentsDisabled.

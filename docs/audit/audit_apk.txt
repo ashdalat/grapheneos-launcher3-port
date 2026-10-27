@@ -1,0 +1,87 @@
+nohup: ignoring input
+build-tools: $ANDROID_HOME/build-tools/37.0.0
+APK: GrapheneLauncher-debug.apk
+
+===== [A] aapt2 dump badging: uses-permission / sdk / package =====
+package: name='app.graphene.launcher.debug' versionCode='1700010000' versionName='17.0-port-1' platformBuildVersionName='17' platformBuildVersionCode='37' compileSdkVersion='37' compileSdkVersionCodename='17'
+minSdkVersion:'30'
+targetSdkVersion:'37'
+uses-permission: name='android.permission.CALL_PHONE'
+uses-permission: name='android.permission.SET_WALLPAPER'
+uses-permission: name='android.permission.SET_WALLPAPER_HINTS'
+uses-permission: name='android.permission.BIND_APPWIDGET'
+uses-permission: name='android.permission.READ_EXTERNAL_STORAGE'
+uses-permission: name='android.permission.RECEIVE_BOOT_COMPLETED'
+uses-permission: name='android.permission.REQUEST_DELETE_PACKAGES'
+uses-permission: name='android.permission.READ_DEVICE_CONFIG'
+uses-permission: name='android.permission.QUERY_ALL_PACKAGES'
+uses-permission: name='android.permission.VIBRATE'
+uses-permission: name='android.permission.ROTATE_SURFACE_FLINGER'
+uses-permission: name='android.permission.WAKEUP_SURFACE_FLINGER'
+uses-permission: name='android.permission.POST_NOTIFICATIONS'
+uses-permission: name='android.permission.LOCK_APPS'
+uses-permission: name='com.android.systemui.permission.LAUNCH_ACCESSIBILITY_SHORTCUT_CHOOSER_DIALOG'
+uses-permission: name='app.graphene.launcher.debug.permission.GRID_CONTROL'
+uses-permission: name='app.graphene.launcher.debug.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION'
+  uses-implied-feature: name='android.hardware.telephony' reason='requested a telephony permission'
+
+===== [B] aapt2 dump permissions =====
+package: app.graphene.launcher.debug
+permission: app.graphene.launcher.debug.permission.START_WIDGET_PICKER_ACTIVITY
+uses-permission: name='android.permission.CALL_PHONE'
+uses-permission: name='android.permission.SET_WALLPAPER'
+uses-permission: name='android.permission.SET_WALLPAPER_HINTS'
+uses-permission: name='android.permission.BIND_APPWIDGET'
+uses-permission: name='android.permission.READ_EXTERNAL_STORAGE'
+uses-permission: name='android.permission.RECEIVE_BOOT_COMPLETED'
+uses-permission: name='android.permission.REQUEST_DELETE_PACKAGES'
+uses-permission: name='android.permission.READ_DEVICE_CONFIG'
+uses-permission: name='android.permission.QUERY_ALL_PACKAGES'
+uses-permission: name='android.permission.VIBRATE'
+uses-permission: name='android.permission.ROTATE_SURFACE_FLINGER'
+uses-permission: name='android.permission.WAKEUP_SURFACE_FLINGER'
+uses-permission: name='android.permission.POST_NOTIFICATIONS'
+uses-permission: name='android.permission.LOCK_APPS'
+uses-permission: name='com.android.systemui.permission.LAUNCH_ACCESSIBILITY_SHORTCUT_CHOOSER_DIALOG'
+permission: app.graphene.launcher.debug.permission.GRID_CONTROL
+uses-permission: name='app.graphene.launcher.debug.permission.GRID_CONTROL'
+permission: app.graphene.launcher.debug.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+uses-permission: name='app.graphene.launcher.debug.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION'
+
+===== [C] APK co assets / js / html / .so / network config? =====
+ 41876412  1981-01-01 01:01   classes.dex
+   430960  1981-01-01 01:01   classes10.dex
+   109408  1981-01-01 01:01   classes11.dex
+   126828  1981-01-01 01:01   classes12.dex
+   258972  1981-01-01 01:01   classes13.dex
+    40332  1981-01-01 01:01   classes14.dex
+   330916  1981-01-01 01:01   classes15.dex
+   477308  1981-01-01 01:01   classes16.dex
+   590188  1981-01-01 01:01   classes17.dex
+   231588  1981-01-01 01:01   classes18.dex
+    78268  1981-01-01 01:01   classes19.dex
+  3055036  1981-01-01 01:01   classes2.dex
+ 17794488  1981-01-01 01:01   classes20.dex
+  9663800  1981-01-01 01:01   classes21.dex
+  8111768  1981-01-01 01:01   classes22.dex
+  1135344  1981-01-01 01:01   classes3.dex
+   833856  1981-01-01 01:01   classes4.dex
+   183504  1981-01-01 01:01   classes5.dex
+   501544  1981-01-01 01:01   classes6.dex
+  1061796  1981-01-01 01:01   classes7.dex
+   269956  1981-01-01 01:01   classes8.dex
+   352332  1981-01-01 01:01   classes9.dex
+    10096  1981-01-01 01:01   lib/arm64-v8a/libandroidx.graphics.path.so
+   389352  1981-01-01 01:01   lib/arm64-v8a/libnrb.so
+     7252  1981-01-01 01:01   lib/armeabi-v7a/libandroidx.graphics.path.so
+   239388  1981-01-01 01:01   lib/armeabi-v7a/libnrb.so
+     9284  1981-01-01 01:01   lib/x86/libandroidx.graphics.path.so
+   335004  1981-01-01 01:01   lib/x86/libnrb.so
+    10760  1981-01-01 01:01   lib/x86_64/libandroidx.graphics.path.so
+   377920  1981-01-01 01:01   lib/x86_64/libnrb.so
+
+===== [D] Chuoi URL trong dex (co the la hang so) =====
+(neu trong = dex khong chua URL nao)
+
+===== [E] Dummy: so luong dex =====
+22

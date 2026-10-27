@@ -1,0 +1,41 @@
+plugins {
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.google.ksp)
+}
+
+android {
+    buildToolsVersion "37.0.0"
+    namespace "com.android.wm.shell"
+    buildFeatures {
+        aidl true
+    }
+    sourceSets {
+        main {
+            java.srcDirs = ['shared/src']
+            kotlin.directories.add('shared/src')
+            // them 'aidl_framework': stub parcelable @hide (android.window.RemoteTransition...)
+            aidl.srcDirs = ['shared/src', 'aidl_framework']
+            manifest.srcFile 'AndroidManifest.xml'
+            res.srcDirs = ['shared', 'shared/res']
+        }
+    }
+}
+
+addFrameworkJar('framework-16.jar')
+compileOnlyCommonJars()
+
+dependencies {
+    implementation libs.dagger.hilt.android
+    ksp libs.dagger.hilt.compiler
+    implementation libs.androidx.core.animation
+    implementation libs.androidx.dynamicanimation
+    compileOnly projects.iconloaderlib
+    compileOnly projects.msdllib
+    compileOnly projects.flags
+    compileOnly projects.utils
+    compileOnly libs.chickenhook.restrictionbypass
+}
+
+ksp {
+    arg("dagger.hilt.disableModulesHaveInstallInCheck", "true")
+}

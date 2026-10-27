@@ -1,0 +1,92 @@
+APK: build/outputs/apk/noQuickstepStandalone/release/graphene-port-noQuickstep-standalone-release.apk
+build-tools: $ANDROID_HOME/build-tools/37.0.0
+===== [1] Dung luong / sha256 =====
+-rw-r--r-- 1 pc pc 12260277 00:05 20 Thg 9  build/outputs/apk/noQuickstepStandalone/release/graphene-port-noQuickstep-standalone-release.apk
+12M	build/outputs/apk/noQuickstepStandalone/release/graphene-port-noQuickstep-standalone-release.apk
+2843442da8cf9f413996b2a59f7566bccc246ca2a16c254c903545b085c1c0b1  build/outputs/apk/noQuickstepStandalone/release/graphene-port-noQuickstep-standalone-release.apk
+debug APK de so sanh: 90M  (93618411 byte)
+
+===== [2] badging: package/sdk/permission/debuggable =====
+package: name='app.graphene.launcher' versionCode='1700010000' versionName='17.0-port-1' platformBuildVersionName='17' platformBuildVersionCode='37' compileSdkVersion='37' compileSdkVersionCodename='17'
+minSdkVersion:'30'
+targetSdkVersion:'37'
+uses-permission: name='android.permission.CALL_PHONE'
+uses-permission: name='android.permission.SET_WALLPAPER'
+uses-permission: name='android.permission.SET_WALLPAPER_HINTS'
+uses-permission: name='android.permission.BIND_APPWIDGET'
+uses-permission: name='android.permission.READ_EXTERNAL_STORAGE'
+uses-permission: name='android.permission.RECEIVE_BOOT_COMPLETED'
+uses-permission: name='android.permission.REQUEST_DELETE_PACKAGES'
+uses-permission: name='android.permission.READ_DEVICE_CONFIG'
+uses-permission: name='android.permission.QUERY_ALL_PACKAGES'
+uses-permission: name='android.permission.VIBRATE'
+uses-permission: name='android.permission.ROTATE_SURFACE_FLINGER'
+uses-permission: name='android.permission.WAKEUP_SURFACE_FLINGER'
+uses-permission: name='android.permission.POST_NOTIFICATIONS'
+uses-permission: name='android.permission.LOCK_APPS'
+uses-permission: name='com.android.systemui.permission.LAUNCH_ACCESSIBILITY_SHORTCUT_CHOOSER_DIALOG'
+uses-permission: name='app.graphene.launcher.permission.GRID_CONTROL'
+uses-permission: name='app.graphene.launcher.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION'
+application-label:'Graphene Launcher'
+  uses-implied-feature: name='android.hardware.telephony' reason='requested a telephony permission'
+
+===== [3] CO QUYEN INTERNET KHONG? =====
+KHONG CO android.permission.INTERNET (sach)
+
+===== [4] aapt2 dump permissions =====
+package: app.graphene.launcher
+permission: app.graphene.launcher.permission.START_WIDGET_PICKER_ACTIVITY
+uses-permission: name='android.permission.CALL_PHONE'
+uses-permission: name='android.permission.SET_WALLPAPER'
+uses-permission: name='android.permission.SET_WALLPAPER_HINTS'
+uses-permission: name='android.permission.BIND_APPWIDGET'
+uses-permission: name='android.permission.READ_EXTERNAL_STORAGE'
+uses-permission: name='android.permission.RECEIVE_BOOT_COMPLETED'
+uses-permission: name='android.permission.REQUEST_DELETE_PACKAGES'
+uses-permission: name='android.permission.READ_DEVICE_CONFIG'
+uses-permission: name='android.permission.QUERY_ALL_PACKAGES'
+uses-permission: name='android.permission.VIBRATE'
+uses-permission: name='android.permission.ROTATE_SURFACE_FLINGER'
+uses-permission: name='android.permission.WAKEUP_SURFACE_FLINGER'
+uses-permission: name='android.permission.POST_NOTIFICATIONS'
+uses-permission: name='android.permission.LOCK_APPS'
+uses-permission: name='com.android.systemui.permission.LAUNCH_ACCESSIBILITY_SHORTCUT_CHOOSER_DIALOG'
+permission: app.graphene.launcher.permission.GRID_CONTROL
+uses-permission: name='app.graphene.launcher.permission.GRID_CONTROL'
+permission: app.graphene.launcher.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+uses-permission: name='app.graphene.launcher.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION'
+
+===== [5] Chu ky =====
+V2 Signer: certificate DN: C=US, O=Android, CN=Android Debug
+V2 Signer: certificate SHA-256 digest: e2e73b9487c9390265a1cc1c3414c2b127f14609843cf8b7f7d4ddc716195f07
+V2 Signer: certificate SHA-1 digest: 9161b063fc907dce8d44115f8d6bee5af19e0f0b
+V2 Signer: certificate MD5 digest: 0ccd4bef3c7cc07b11c23dfdd1349af1
+(cert ban debug: e2e73b9487c9390265a1cc1c3414c2b127f14609843cf8b7f7d4ddc716195f07)
+
+===== [6] Thanh phan APK: dex / so native lib =====
+1
+tong dex: 7.5 MB
+8
+    11186  1981-01-01 01:01   assets/dexopt/baseline.prof
+     1302  1981-01-01 01:01   assets/dexopt/baseline.profm
+
+===== [7] Quet dex: co thu vien mang/tracker khong =====
+okhttp3                0
+retrofit2              0
+coil/                  0
+com/topjohnwu          0
+com/google/firebase    0
+crashlytics            0
+HttpURLConnection      0
+java/net/Socket        0
+SslSocket              0
+com/google/android/gms 0
+
+===== [8] URL trong dex ban release =====
+http://
+http://schemas.android.com/apk/res/android
+http://schemas.android.com/apk/res-auto
+http://schemas.android.com/apk/res-auto/com.android.launcher3
+https://goo.gle/compose-feedback
+https://youtrack.jetbrains.com/issue/KT-55980
+http://xmlpull.org/v1/doc/features.html#indent-output

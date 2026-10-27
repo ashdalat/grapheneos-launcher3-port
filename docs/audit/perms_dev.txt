@@ -1,0 +1,16 @@
+    uid=10256 gids=[] type=0 prot=signature|privileged
+      app.graphene.launcher.debug.permission.START_WIDGET_PICKER_ACTIVITY: prot=signature|privileged
+    requested permissions:
+    install permissions:
+      android.permission.RECEIVE_BOOT_COMPLETED: granted=true
+      android.permission.SET_WALLPAPER: granted=true
+      app.graphene.launcher.debug.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      app.graphene.launcher.debug.permission.GRID_CONTROL: granted=true
+      android.permission.REQUEST_DELETE_PACKAGES: granted=true
+      android.permission.SET_WALLPAPER_HINTS: granted=true
+      android.permission.VIBRATE: granted=true
+      android.permission.QUERY_ALL_PACKAGES: granted=true
+        android.permission.POST_NOTIFICATIONS: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+        android.permission.OTHER_SENSORS: granted=true, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+        android.permission.READ_EXTERNAL_STORAGE: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED|RESTRICTION_INSTALLER_EXEMPT]
+        android.permission.CALL_PHONE: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
